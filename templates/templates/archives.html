@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .card-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        h6 {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .answer-content {
+            font-size: 1em;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 20px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .markdown-content {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .custom-input {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .custom-input textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .custom-input button {
+            background-color: #17a2b8;
+            align-self: flex-start;
+        }
+
+        .custom-input button:hover {
+            background-color: #138496;
+        }
+
+        @media (max-width: 768px) {
+            .gallery img {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .custom-input {
+                flex-direction: column;
+            }
+
+            .custom-input textarea {
+                width: 100%;
+            }
+
+            .custom-input button {
+                width: 100%;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<a href="/">Home</a>
+    <div class="card-container">
+        {% for arc in archives %}
+            <div class="card">
+                <h6>Answer:</h6>
+                <div class="answer-content markdown-content" id="answer-content-{{ loop.index }}">{{ arc.pickle_db.answer | safe }}</div>
+                <h6>Question:</h6>
+                <div class="gallery">
+                    {% for image in arc.images %}
+                        <img src="{{ url_for('static', filename=image) }}" alt="{{ image }}">
+                    {% endfor %}
+                </div>
+                <h6>Yor Prompt/Question:</h6>
+                <div class="custom-input">
+                    <textarea id="customPrompt" placeholder="Enter custom prompt here..." disabled >{% if arc.pickle_db.custom_prompt %}{{ arc.pickle_db.custom_prompt }}{% endif %}</textarea>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Render Markdown content
+        document.addEventListener('DOMContentLoaded', () => {
+            const answerContents = document.querySelectorAll('[id^="answer-content-"]');
+            answerContents.forEach((content, index) => {
+                content.innerHTML = marked.parse(content.textContent);
+            });
+        });
+    </script>
+</body>
+</html>

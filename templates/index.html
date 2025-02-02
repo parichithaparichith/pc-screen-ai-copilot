@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Answers</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Enhanced Anchor Styles */
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        a:hover {
+            background-color: #007bff;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        a:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 {
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .answer {
+            border-top: 2px solid #007bff;
+            font-size: 1.2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .gallery img {
+            border-radius: 8px;
+            width: 200px;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        #lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        #lightbox:target {
+            display: flex;
+        }
+
+        #lightbox:target img {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background-color: #004494;
+            transform: scale(1);
+        }
+
+        button#clear_dir {
+            background-color: #dc3545;
+        }
+
+        button#clear_dir:hover {
+            background-color: #c82333;
+        }
+        button#reset_prompt {
+            background-color: #dc3545;
+        }
+
+        button#reset_prompt:hover {
+            background-color: #c82333;
+        }
+
+        button#get_ans {
+            background-color: #28a745;
+        }
+
+        button#get_ans:hover {
+            background-color: #218838;
+        }
+
+        .loader {
+            display: none;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+
+        .custom-input {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .custom-input textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .custom-input button {
+            background-color: #17a2b8;
+            align-self: flex-start;
+        }
+
+        .custom-input button:hover {
+            background-color: #138496;
+        }
+
+        @media (max-width: 768px) {
+            .gallery img {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .custom-input {
+                flex-direction: column;
+            }
+
+            .custom-input textarea {
+                width: 100%;
+            }
+
+            .custom-input button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<a href="archives">History</a>
+<a href="connect-mobile">Connect Mobile</a>
+{% if db_data.answer %}
+<h3>AI Answer:</h3>
+<div class="answer">
+    <div id="answer-content">{{ db_data.answer | safe }}</div>
+</div>
+{% endif %}
+{% if images %}
+<h3>Screenshots:</h3>
+<div class="gallery">
+    {% for image in images %}
+    <a href="#lightbox" onclick="showImage('{{ url_for('static', filename=image) }}')">
+        <img src="{{ url_for('static', filename=image) }}" alt="{{ image }}">
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+<h3>Yor Prompt/Question:</h3>
+<div class="custom-input">
+    <textarea id="customPrompt" placeholder="Enter custom prompt here..." >{% if db_data.custom_prompt %}{{ db_data.custom_prompt }}{% endif %}</textarea>
+</div>
+<div class="action-buttons">
+    <button id="take_sc">Take Screenshot</button>
+    <button id="clear_dir">Clear</button>
+    <button id="reset_prompt">Reset Prompt</button>
+    <button id="get_ans">Submit</button>
+</div>
+<!-- Lightbox -->
+<div id="lightbox" onclick="hideLightbox()" style="display: none">
+    <img id="lightbox-img" src="" alt="Large Image">
+</div>
+<div class="overlay" id="overlay"></div>
+<div class="loader" id="loader"></div>
+<script>
+    function sendAction(action, customPrompt = '') {
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+        fetch('/actions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: action, custom_prompt: customPrompt })
+        }).then((res) => {
+            console.log(res);
+            location.reload();
+        }).finally(() => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        });
+    }
+
+    document.getElementById('take_sc').addEventListener('click', () => {
+        const customPrompt = document.getElementById('customPrompt').value;
+        sendAction('take_sc', customPrompt);
+    });
+
+    document.getElementById('get_ans').addEventListener('click', () => {
+        const customPrompt = document.getElementById('customPrompt').value;
+        sendAction('get_ans', customPrompt);
+    });
+
+    document.getElementById('clear_dir').addEventListener('click', () => {
+        sendAction('clear_dir');
+    });
+
+    document.getElementById('reset_prompt').addEventListener('click', () => {
+        sendAction('reset_prompt');
+    });
+
+    function showImage(src) {
+        console.log("src", src);
+        var lightboxImg = document.getElementById('lightbox-img');
+        lightboxImg.src = src;
+        lightbox.style.display = 'flex';
+    }
+
+    function hideLightbox() {
+        var lightbox = document.getElementById('lightbox');
+        lightbox.style.display = 'none';
+    }
+
+    document.getElementById('lightbox').addEventListener('click', function () {
+        hideLightbox();
+    });
+    // Render Markdown content
+    const answerContent = document.getElementById('answer-content');
+    if (answerContent) {
+        answerContent.innerHTML = marked.parse(answerContent.textContent);
+    }
+</script>
+</body>
+</html>

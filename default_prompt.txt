@@ -1,0 +1,4 @@
+Read and understand problems/questions in given images. Extract the text and context of the problem/question.
+- Solve the question and provide an answer in Markdown format.
+- Give direct answer in markdown without explanation or context.
+- If it is coding problem solve it and provide the code in Python.

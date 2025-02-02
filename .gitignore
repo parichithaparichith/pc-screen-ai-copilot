@@ -1,0 +1,7 @@
+static
+.idea
+build
+dist
+config.json
+.venv
+pickle_db.pkl
